@@ -1,0 +1,15 @@
+* {
+    box-sizing: border-box;
+}
+
+#board {
+    display: grid;
+    grid-template-rows: repeat(16, 40px);
+    grid-template-columns: repeat(8, 40px);
+}
+
+.tile {
+    width: 42px;
+    height: 42px;
+    border: 1px solid black;
+}
