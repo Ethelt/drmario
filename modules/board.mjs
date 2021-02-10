@@ -30,7 +30,11 @@ export class Board {
         pill.parts[0].position = [1, 3]
         this.board[1][4].content = pill.parts[1]
         pill.parts[1].position = [1, 4]
-        return pill
+        var isLosing = false
+        if (this.board[2][3].content || this.board[2][4].content) {
+            isLosing = true
+        }
+        return { pill: pill, isLosing: isLosing }
     }
 
     movePill(pill, direction) {
@@ -75,7 +79,8 @@ export class Board {
             if (pill.parts[0].position[1] == this.width - 1) {
                 movePossible = this.movePill(pill, [0, -1])
             } else if (this.board[pill.parts[0].position[0]][pill.parts[1].position[1] + 1].content != null) {
-                movePossible = this.movePill(pill, [0, -1])
+                // movePossible = this.movePill(pill, [0, -1])
+                movePossible = false
             }
             if (movePossible) {
                 pill.isHorizontal = true
@@ -85,6 +90,14 @@ export class Board {
                 pill.parts[0].position[1] += 1
                 this.board[pill.parts[0].position[0]][pill.parts[0].position[1]].content = pill.parts[0]
                 pill.parts.push(pill.parts.shift())
+            } else if (this.board[pill.parts[0].position[0]][pill.parts[0].position[1] - 1].content == null && pill.parts[0].position[1] == this.width - 1) {
+                pill.isHorizontal = true
+                pill.parts[0].position[1] -= 1
+                this.board[pill.parts[0].position[0]][pill.parts[0].position[1]].content = pill.parts[0]
+                var movingPart = pill.parts[1]
+                this.board[movingPart.position[0]][movingPart.position[1]].content = null
+                movingPart.position[0] += 1
+                this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
             }
         }
     }
@@ -106,7 +119,8 @@ export class Board {
             if (pill.parts[0].position[1] == this.width - 1) {
                 movePossible = this.movePill(pill, [0, -1])
             } else if (this.board[pill.parts[0].position[0]][pill.parts[1].position[1] + 1].content != null) {
-                movePossible = this.movePill(pill, [0, -1])
+                // movePossible = this.movePill(pill, [0, -1])
+                movePossible = false
             }
             if (movePossible) {
                 pill.isHorizontal = true
@@ -115,12 +129,29 @@ export class Board {
                 movingPart.position[0] += 1
                 movingPart.position[1] += 1
                 this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
+            } else if (this.board[pill.parts[0].position[0]][pill.parts[0].position[1] - 1].content == null && pill.parts[0].position[1] == this.width - 1) {
+                pill.isHorizontal = true
+                pill.parts[0].position[1] -= 1
+                this.board[pill.parts[0].position[0]][pill.parts[0].position[1]].content = pill.parts[0]
+                var movingPart = pill.parts[1]
+                this.board[movingPart.position[0]][movingPart.position[1]].content = null
+                movingPart.position[0] += 1
+                this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
             }
+
+            // pill.isHorizontal = true
+            // var movingPart = pill.parts[1]
+            // var bottomPart = pill.part[0]
+
+            // this.board[movingPart.position[0]][movingPart.position[1]].content = null
+            // movingPart.position[0] += 1
+            // movingPart.position[1] += 1
+            // this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
         }
     }
 
-    spawnVirus(color, position) {
-        var virus = new Virus(color, position)
+    spawnVirus(color, position, virusManager) {
+        var virus = new Virus(color, position, virusManager)
         this.board[position[0]][position[1]].content = virus
         return virus
     }

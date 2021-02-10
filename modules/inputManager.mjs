@@ -19,15 +19,9 @@ export class InputManager {
                 this.handleKeyDown(event)
             }
         })
-        document.addEventListener("keyup", (event) => {
-            if (this.gameManager.activePill) {
-                this.handleKeyUp(event)
-            }
-        })
     }
 
     handleKeyDown(event) {
-        // shift: event.key == "Shift"; arrow rigth: event.key == "ArrowRight"
         if (this.controlScheme.moveDown.includes(event.key)) {
             clearTimeout(this.gameManager.scheduledDrop)
             this.inputBusy = true
@@ -40,16 +34,6 @@ export class InputManager {
             if (this.controlScheme.moveRight.includes(event.key)) {
                 this.gameManager.moveActivePill([0, 1])
             }
-        }
-    }
-
-    handleKeyUp(event) {
-        if (this.controlScheme.moveDown.includes(event.key)) {
-            clearTimeout(this.gameManager.scheduledDrop)
-            this.inputBusy = false
-            this.gameManager.dropActivePill(false)
-        }
-        if (!this.inputBusy) {
             if (this.controlScheme.rotateLeft.includes(event.key)) {
                 this.gameManager.rotateActivePill("left")
             }

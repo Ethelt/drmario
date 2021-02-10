@@ -2,26 +2,28 @@
 
 import { Board } from "./board.mjs"
 import { InputManager } from "./inputManager.mjs"
-import { Virus } from "./virus.mjs";
 import { VirusManager } from "./virusManager.mjs";
+import { ScoreSystem } from "./scoreSystem.mjs";
 
 export class GameManager {
 
     constructor() {
         this.board;
         this.activePill;
-        this.isGameOver = false;
+        this.isLevelBeaten = false;
         this.input = new InputManager(this);
         this.level = 1;
         this.colors = ["blue", "red", "yellow"]
         this.virusManager = new VirusManager(this)
+        this.scoreSystem = new ScoreSystem(this)
         this.scheduledDrop;
     }
 
     startGame() {
-        this.isGameOver = false;
+        console.log(`Max score: ${this.scoreSystem.getMaxScore() ? this.scoreSystem.getMaxScore() : 0}`)
+        this.scheduledDrop = null
+        this.isLevelBeaten = false;
         this.board = new Board(8, 16);
-        // this.viruses = this.spawnViruses()
         this.virusManager.spawnViruses(this.level)
         this.spawnPill()
         this.board.render()
@@ -32,8 +34,13 @@ export class GameManager {
         this.board.render()
         var color = `${this.colors[Math.floor(Math.random() * this.colors.length)]}|${this.colors[Math.floor(Math.random() * this.colors.length)]}`
         // var color = "red|blue"
-        this.activePill = this.board.spawnPill(color)
-        this.scheduledDrop = setTimeout(() => this.dropActivePill(), 1000)
+        var spawn = this.board.spawnPill(color)
+        this.activePill = spawn.pill
+        if (spawn.isLosing) {
+            setTimeout(() => this.finishGame(), 1000)
+        } else {
+            this.scheduledDrop = setTimeout(() => this.dropActivePill(), 1000)
+        }
     }
 
     dropActivePill(rushed = false) {
@@ -41,16 +48,10 @@ export class GameManager {
         if (pillLanded) {
             var objectsToRemove = this.getObjectsToRemove(this.activePill)
             objectsToRemove.forEach(object => {
-                if (object instanceof Virus) {
-                    this.virusManager.destroyVirus(object)
-                }
                 this.board.clearObject(object)
             })
-            if (this.isGameOver) {
-                this.level += 1
-                alert("You Win!")
-                this.startGame()
-            }
+
+            this.finishLevelIfBeaten()
             if (objectsToRemove.size > 0) {
                 this.activePill = null
                 this.doGravity(new Set())
@@ -62,6 +63,7 @@ export class GameManager {
             this.scheduledDrop = setTimeout(() => this.dropActivePill(rushed), rushed ? 100 : 1000)
         }
         this.board.render()
+        this.finishLevelIfBeaten()
     }
 
     moveActivePill(direction) {
@@ -113,7 +115,23 @@ export class GameManager {
         }
     }
 
+    finishLevelIfBeaten() {
+        if (this.isLevelBeaten) {
+            this.board.render()
+            this.level += 1
+            this.scoreSystem.saveScore()
+            alert("You Win!")
+            this.startGame()
+        }
+    }
+
+    finishGame() {
+        this.board.render()
+        alert("You Lost!")
+        this.startGame()
+    }
+
     allVirusesDestroyed() {
-        this.isGameOver = true
+        this.isLevelBeaten = true
     }
 }
