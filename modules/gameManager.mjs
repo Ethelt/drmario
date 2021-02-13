@@ -4,6 +4,7 @@ import { Board } from "./board.mjs"
 import { InputManager } from "./inputManager.mjs"
 import { VirusManager } from "./virusManager.mjs";
 import { ScoreSystem } from "./scoreSystem.mjs";
+import { InfoManager } from "./infoManager.mjs";
 
 export class GameManager {
 
@@ -11,59 +12,74 @@ export class GameManager {
         this.board;
         this.activePill;
         this.isLevelBeaten = false;
+        this.isFirstPill = true
         this.input = new InputManager(this);
         this.level = 1;
-        this.colors = ["blue", "red", "yellow"]
+        this.colors = ["blue", "brown", "yellow"]
         this.virusManager = new VirusManager(this)
         this.scoreSystem = new ScoreSystem(this)
         this.scheduledDrop;
     }
 
-    startGame() {
-        console.log(`Max score: ${this.scoreSystem.getMaxScore() ? this.scoreSystem.getMaxScore() : 0}`)
+    startGame(spawn = true) {
+        this.isLosing = false
         this.scheduledDrop = null
         this.isLevelBeaten = false;
-        this.board = new Board(8, 16);
+        this.board = new Board(8, 17);
         this.virusManager.spawnViruses(this.level)
-        this.spawnPill()
+        InfoManager.updateLevel(this.level)
+        if (spawn) {
+            this.spawnPill()
+        }
+        this.setBackgroundColors(this.getBackgroundColor())
         this.board.render()
     }
 
     spawnPill() {
-        this.input.inputBusy = false
-        this.board.render()
-        var color = `${this.colors[Math.floor(Math.random() * this.colors.length)]}|${this.colors[Math.floor(Math.random() * this.colors.length)]}`
-        // var color = "red|blue"
-        var spawn = this.board.spawnPill(color)
-        this.activePill = spawn.pill
-        if (spawn.isLosing) {
-            setTimeout(() => this.finishGame(), 1000)
-        } else {
-            this.scheduledDrop = setTimeout(() => this.dropActivePill(), 1000)
+        if (!this.isLosing) {
+            this.activePill = null
+            this.board.render()
+            var color = `${this.colors[Math.floor(Math.random() * this.colors.length)]}|${this.colors[Math.floor(Math.random() * this.colors.length)]}`
+            // var color = "brown|blue"
+            var spawn = this.board.spawnPill(color)
+            var spawnedPill = spawn.pill
+            if (spawn.isLosing) {
+                this.isLosing = true
+                setTimeout(() => this.finishGame(), 300)
+            } else {
+                this.scheduledDrop = setTimeout(() => {
+                    this.activePill = spawnedPill
+                    this.input.inputBusy = false
+                    this.dropActivePill()
+                }, 600)
+            }
         }
     }
 
     dropActivePill(rushed = false) {
-        var pillLanded = !this.board.movePill(this.activePill, [1, 0])
+        this.isFirstPill = false
+        var pillLanded = false
+        if (this.activePill) {
+            var pillLanded = !this.board.movePill(this.activePill, [1, 0])
+        }
         if (pillLanded) {
             var objectsToRemove = this.getObjectsToRemove(this.activePill)
             objectsToRemove.forEach(object => {
                 this.board.clearObject(object)
             })
-
-            this.finishLevelIfBeaten()
-            if (objectsToRemove.size > 0) {
-                this.activePill = null
-                this.doGravity(new Set())
-                return 1
-            } else {
-                this.spawnPill()
-            }
+            setTimeout(() => {
+                if (objectsToRemove.size > 0) {
+                    this.activePill = null
+                    this.doGravity(new Set())
+                    return 1
+                } else {
+                    this.spawnPill()
+                }
+            }, objectsToRemove.size > 0 ? 300 : 1)
         } else {
-            this.scheduledDrop = setTimeout(() => this.dropActivePill(rushed), rushed ? 100 : 1000)
+            this.scheduledDrop = setTimeout(() => this.dropActivePill(rushed), rushed ? 50 : 600)
         }
         this.board.render()
-        this.finishLevelIfBeaten()
     }
 
     moveActivePill(direction) {
@@ -89,49 +105,98 @@ export class GameManager {
     }
 
     doGravity(objectsToRemove) {
+        this.input.inputBusy = true
         this.board.render()
         var result = this.board.doGravityStep()
         var areMovesPossible = result.areMovesPossible
         var wereObjectsCleared = false
-        objectsToRemove.forEach(object => {
-            this.board.clearObject(object)
-            wereObjectsCleared = true
-        })
-        var objectsToRemove = new Set()
-        result.stablePills.forEach(pill => {
-            objectsToRemove = new Set([...objectsToRemove, ...this.getObjectsToRemove(pill)])
-        })
-        if (areMovesPossible) {
-            this.scheduledDrop = setTimeout(() => this.doGravity(objectsToRemove), 1000)
-        } else {
-            if (wereObjectsCleared) {
-                this.scheduledDrop = setTimeout(() => this.doGravity(objectsToRemove), 1000)
+
+        setTimeout(() => {
+            var objectsToRemove = new Set()
+            result.stablePills.forEach(pill => {
+                objectsToRemove = new Set([...objectsToRemove, ...this.getObjectsToRemove(pill)])
+            })
+            objectsToRemove.forEach(object => {
+                this.board.clearObject(object)
+                wereObjectsCleared = true
+            })
+            if (areMovesPossible) {
+                this.scheduledDrop = setTimeout(() => this.doGravity(objectsToRemove), 200)
             } else {
-                setTimeout(() => {
-                    this.board.render()
-                    this.spawnPill()
-                }, wereObjectsCleared ? 1000 : 10)
+                if (wereObjectsCleared) {
+                    this.scheduledDrop = setTimeout(() => this.doGravity(objectsToRemove), 200)
+                } else {
+                    console.log("GO")
+                    setTimeout(() => {
+                        this.board.render()
+                        this.finishLevelIfBeaten()
+                        if (!this.isLevelBeaten) {
+                            this.input.inputBusy = true
+                            this.spawnPill()
+                        }
+                    }, wereObjectsCleared ? 200 : 10)
+                }
             }
-        }
+        }, objectsToRemove.length > 0 ? 300 : 1)
     }
 
     finishLevelIfBeaten() {
         if (this.isLevelBeaten) {
             this.board.render()
-            this.level += 1
-            this.scoreSystem.saveScore()
-            alert("You Win!")
-            this.startGame()
+            var victoryScreen = document.createElement("div")
+            victoryScreen.tabIndex = "-1"
+            victoryScreen.classList.add("victory_screen")
+            victoryScreen.style.backgroundColor = this.getBackgroundColor()
+            victoryScreen.onkeyup = () => {
+                victoryScreen.remove()
+                this.startNextLevel()
+            }
+            document.getElementById("game-area").appendChild(victoryScreen)
+            victoryScreen.focus()
         }
     }
 
+    startNextLevel() {
+        this.level += 1
+        this.inputBusy = false
+        this.isFirstPill = true
+        this.startGame(true)
+    }
+
     finishGame() {
+        console.log("finish")
+        // if (document.getElementsByClassName("failure_screen") == []) {
         this.board.render()
-        alert("You Lost!")
-        this.startGame()
+        this.scoreSystem.saveScore()
+        var failureScreen = document.createElement("div")
+        failureScreen.tabIndex = "-1"
+        failureScreen.classList.add("failure_screen")
+        failureScreen.style.backgroundColor = this.getBackgroundColor()
+        failureScreen.onkeyup = (event) => {
+            if (event.key == "Shift") {
+                failureScreen.remove()
+                this.level = 1
+                this.scoreSystem.resetScore()
+                this.startGame()
+            }
+        }
+        document.getElementById("game-area").appendChild(failureScreen)
+        failureScreen.focus()
+        // }
     }
 
     allVirusesDestroyed() {
         this.isLevelBeaten = true
+    }
+
+    getBackgroundColor() {
+        var colors = ["cyan", "purple", "pink"]
+        return colors[this.level % colors.length]
+    }
+
+    setBackgroundColors(color) {
+        document.getElementById("game-area").style.backgroundColor = color
+        document.getElementById("bottle__neck").style.backgroundColor = color
+        document.getElementById("bottle__body").style.backgroundColor = color
     }
 }

@@ -21,15 +21,25 @@ export class Board {
                 board[i].push(new Cell())
             }
         }
+        board = this.fillAroundNeck(board)
+        return board
+    }
+
+    fillAroundNeck(board) {
+        var rowToFill = board[0]
+        var cellsToFill = [0, 1, 2, 5, 6, 7]
+        cellsToFill.forEach(cellNumber => {
+            rowToFill[cellNumber].content = { color: "" }
+        })
         return board
     }
 
     spawnPill(color) {
         var pill = new Pill(color)
         this.board[1][3].content = pill.parts[0]
-        pill.parts[0].position = [1, 3]
+        pill.parts[0].position = [0, 3]
         this.board[1][4].content = pill.parts[1]
-        pill.parts[1].position = [1, 4]
+        pill.parts[1].position = [0, 4]
         var isLosing = false
         if (this.board[2][3].content || this.board[2][4].content) {
             isLosing = true
@@ -73,6 +83,7 @@ export class Board {
                 movingPart.position[0] -= 1
                 movingPart.position[1] -= 1
                 this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
+                pill.updatePartsSprites()
             }
         } else {
             var movePossible = true
@@ -90,6 +101,8 @@ export class Board {
                 pill.parts[0].position[1] += 1
                 this.board[pill.parts[0].position[0]][pill.parts[0].position[1]].content = pill.parts[0]
                 pill.parts.push(pill.parts.shift())
+
+                pill.updatePartsSprites()
             } else if (this.board[pill.parts[0].position[0]][pill.parts[0].position[1] - 1].content == null && pill.parts[0].position[1] == this.width - 1) {
                 pill.isHorizontal = true
                 pill.parts[0].position[1] -= 1
@@ -98,6 +111,8 @@ export class Board {
                 this.board[movingPart.position[0]][movingPart.position[1]].content = null
                 movingPart.position[0] += 1
                 this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
+
+                pill.updatePartsSprites()
             }
         }
     }
@@ -113,6 +128,7 @@ export class Board {
                 this.board[pill.parts[0].position[0]][pill.parts[0].position[1]].content = pill.parts[0]
                 this.board[pill.parts[1].position[0]][pill.parts[1].position[1]].content = pill.parts[1]
                 pill.parts.push(pill.parts.shift())
+                pill.updatePartsSprites()
             }
         } else {
             var movePossible = true
@@ -129,6 +145,7 @@ export class Board {
                 movingPart.position[0] += 1
                 movingPart.position[1] += 1
                 this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
+                pill.updatePartsSprites()
             } else if (this.board[pill.parts[0].position[0]][pill.parts[0].position[1] - 1].content == null && pill.parts[0].position[1] == this.width - 1) {
                 pill.isHorizontal = true
                 pill.parts[0].position[1] -= 1
@@ -137,6 +154,8 @@ export class Board {
                 this.board[movingPart.position[0]][movingPart.position[1]].content = null
                 movingPart.position[0] += 1
                 this.board[movingPart.position[0]][movingPart.position[1]].content = movingPart
+
+                pill.updatePartsSprites()
             }
 
             // pill.isHorizontal = true
@@ -192,8 +211,8 @@ export class Board {
     }
 
     clearObject(object) {
-        this.board[object.position[0]][object.position[1]].content = null
         object.destroy()
+        setTimeout(() => { this.board[object.position[0]][object.position[1]].content = null }, 300)
     }
 
     doGravityStep() {
@@ -227,13 +246,17 @@ export class Board {
                 var tile = document.createElement("div")
                 tile.classList.add("tile")
                 if (cell.content) {
-                    tile.style.backgroundColor = cell.content.color
+                    if (cell.content.sprite) {
+                        tile.style.backgroundImage = cell.content.sprite
+                    } else {
+                        tile.style.backgroundColor = cell.content.color
+                    }
                 }
                 board.appendChild(tile)
             })
         })
         document.getElementById("board").remove()
-        document.body.appendChild(board)
+        document.getElementById("game-area").appendChild(board)
     }
 
     getRow(y) {

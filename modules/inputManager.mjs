@@ -25,7 +25,7 @@ export class InputManager {
         if (this.controlScheme.moveDown.includes(event.key)) {
             clearTimeout(this.gameManager.scheduledDrop)
             this.inputBusy = true
-            this.gameManager.dropActivePill(true)
+            this.gameManager.scheduledDrop = setTimeout(() => { this.gameManager.dropActivePill(true) }, 10)
         }
         if (!this.inputBusy) {
             if (this.controlScheme.moveLeft.includes(event.key)) {
