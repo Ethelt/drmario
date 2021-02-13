@@ -16,7 +16,7 @@ body {
 
 /* 32px per square, 40 squares */
 
-#game-area {
+#game_area {
     width: 1280px;
     height: 768px;
     position: relative;
@@ -44,13 +44,20 @@ body {
     background-image: url("./images/area/magnifier.png");
 }
 
-#doctor {
+#doctor_area {
     position: absolute;
     right: 64px;
     top: 64px;
     width: 288px;
     height: 288px;
     background-image: url("./images/area/doctor.png");
+}
+
+#doctor {
+    position: absolute;
+    top: 64px;
+    left: 32px;
+    z-index: 2;
 }
 
 #info {
@@ -125,4 +132,10 @@ body {
     height: 160px;
     background-image: url("./images/game_over.png");
     z-index: 10;
+}
+
+.pill_part {
+    position: absolute;
+    width: 32px;
+    height: 32px;
 }

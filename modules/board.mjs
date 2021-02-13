@@ -256,7 +256,7 @@ export class Board {
             })
         })
         document.getElementById("board").remove()
-        document.getElementById("game-area").appendChild(board)
+        document.getElementById("game_area").appendChild(board)
     }
 
     getRow(y) {

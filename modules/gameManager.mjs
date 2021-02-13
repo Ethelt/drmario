@@ -5,6 +5,7 @@ import { InputManager } from "./inputManager.mjs"
 import { VirusManager } from "./virusManager.mjs";
 import { ScoreSystem } from "./scoreSystem.mjs";
 import { InfoManager } from "./infoManager.mjs";
+import { pillThrower } from "./pillThrower.mjs";
 
 export class GameManager {
 
@@ -13,11 +14,13 @@ export class GameManager {
         this.activePill;
         this.isLevelBeaten = false;
         this.isFirstPill = true
+        this.isLosing = false
         this.input = new InputManager(this);
         this.level = 1;
         this.colors = ["blue", "brown", "yellow"]
         this.virusManager = new VirusManager(this)
         this.scoreSystem = new ScoreSystem(this)
+        this.pillThrower = new pillThrower(this)
         this.scheduledDrop;
     }
 
@@ -27,8 +30,10 @@ export class GameManager {
         this.isLevelBeaten = false;
         this.board = new Board(8, 17);
         this.virusManager.spawnViruses(this.level)
+        this.pillThrower.changeDoctorSprite("high")
         InfoManager.updateLevel(this.level)
         if (spawn) {
+            this.pillThrower.prepareNextPill()
             this.spawnPill()
         }
         this.setBackgroundColors(this.getBackgroundColor())
@@ -39,20 +44,24 @@ export class GameManager {
         if (!this.isLosing) {
             this.activePill = null
             this.board.render()
-            var color = `${this.colors[Math.floor(Math.random() * this.colors.length)]}|${this.colors[Math.floor(Math.random() * this.colors.length)]}`
-            // var color = "brown|blue"
-            var spawn = this.board.spawnPill(color)
-            var spawnedPill = spawn.pill
-            if (spawn.isLosing) {
-                this.isLosing = true
-                setTimeout(() => this.finishGame(), 300)
-            } else {
-                this.scheduledDrop = setTimeout(() => {
-                    this.activePill = spawnedPill
-                    this.input.inputBusy = false
-                    this.dropActivePill()
-                }, 600)
-            }
+            var color = this.pillThrower.nextPillColor
+            this.pillThrower.throwPill()
+            this.input.inputBusy = true
+            setTimeout(() => {
+                var spawn = this.board.spawnPill(color)
+                var spawnedPill = spawn.pill
+                if (spawn.isLosing) {
+                    this.isLosing = true
+                    setTimeout(() => this.finishGame(), 300)
+                } else {
+                    this.scheduledDrop = setTimeout(() => {
+                        this.activePill = spawnedPill
+                        this.dropActivePill()
+                        this.input.inputBusy = false
+                        this.pillThrower.prepareNextPill()
+                    }, 300)
+                }
+            }, 2500)
         }
     }
 
@@ -151,7 +160,7 @@ export class GameManager {
                 victoryScreen.remove()
                 this.startNextLevel()
             }
-            document.getElementById("game-area").appendChild(victoryScreen)
+            document.getElementById("game_area").appendChild(victoryScreen)
             victoryScreen.focus()
         }
     }
@@ -180,7 +189,8 @@ export class GameManager {
                 this.startGame()
             }
         }
-        document.getElementById("game-area").appendChild(failureScreen)
+        document.getElementById("game_area").appendChild(failureScreen)
+        this.pillThrower.changeDoctorSprite("failed")
         failureScreen.focus()
         // }
     }
@@ -195,7 +205,7 @@ export class GameManager {
     }
 
     setBackgroundColors(color) {
-        document.getElementById("game-area").style.backgroundColor = color
+        document.getElementById("game_area").style.backgroundColor = color
         document.getElementById("bottle__neck").style.backgroundColor = color
         document.getElementById("bottle__body").style.backgroundColor = color
     }
