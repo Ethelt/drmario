@@ -40,11 +40,10 @@ export class Board {
         pill.parts[0].position = [0, 3]
         this.board[1][4].content = pill.parts[1]
         pill.parts[1].position = [0, 4]
-        var isLosing = false
-        if (this.board[2][3].content || this.board[2][4].content) {
-            isLosing = true
-        }
-        return { pill: pill, isLosing: isLosing }
+        // if (this.board[2][3].content || this.board[2][4].content) {
+        //     isLosing = true
+        // }
+        return { pill: pill }
     }
 
     movePill(pill, direction) {

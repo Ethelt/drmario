@@ -6,6 +6,7 @@ import { VirusManager } from "./virusManager.mjs";
 import { ScoreSystem } from "./scoreSystem.mjs";
 import { InfoManager } from "./infoManager.mjs";
 import { pillThrower } from "./pillThrower.mjs";
+import { VirusChoreographer } from "./virusChoreographer.mjs";
 
 export class GameManager {
 
@@ -21,6 +22,7 @@ export class GameManager {
         this.virusManager = new VirusManager(this)
         this.scoreSystem = new ScoreSystem(this)
         this.pillThrower = new pillThrower(this)
+        this.virusChoreographer = new VirusChoreographer(this.virusManager)
         this.scheduledDrop;
     }
 
@@ -30,6 +32,8 @@ export class GameManager {
         this.isLevelBeaten = false;
         this.board = new Board(8, 17);
         this.virusManager.spawnViruses(this.level)
+        this.virusChoreographer.createDancers()
+        this.virusChoreographer.startDance(true)
         this.pillThrower.changeDoctorSprite("high")
         InfoManager.updateLevel(this.level)
         if (spawn) {
@@ -50,17 +54,12 @@ export class GameManager {
             setTimeout(() => {
                 var spawn = this.board.spawnPill(color)
                 var spawnedPill = spawn.pill
-                if (spawn.isLosing) {
-                    this.isLosing = true
-                    setTimeout(() => this.finishGame(), 300)
-                } else {
-                    this.scheduledDrop = setTimeout(() => {
-                        this.activePill = spawnedPill
-                        this.dropActivePill()
-                        this.input.inputBusy = false
-                        this.pillThrower.prepareNextPill()
-                    }, 300)
-                }
+                this.scheduledDrop = setTimeout(() => {
+                    this.activePill = spawnedPill
+                    this.dropActivePill()
+                    this.input.inputBusy = false
+                    this.pillThrower.prepareNextPill()
+                }, 300)
             }, 2500)
         }
     }
@@ -82,7 +81,12 @@ export class GameManager {
                     this.doGravity(new Set())
                     return 1
                 } else {
-                    this.spawnPill()
+                    if (this.board.board[1][3].content || this.board.board[1][4].content) {
+                        this.isLosing = true
+                        setTimeout(() => this.finishGame(), 300)
+                    } else {
+                        this.spawnPill()
+                    }
                 }
             }, objectsToRemove.size > 0 ? 300 : 1)
         } else {
@@ -135,13 +139,17 @@ export class GameManager {
                 if (wereObjectsCleared) {
                     this.scheduledDrop = setTimeout(() => this.doGravity(objectsToRemove), 200)
                 } else {
-                    console.log("GO")
                     setTimeout(() => {
                         this.board.render()
                         this.finishLevelIfBeaten()
                         if (!this.isLevelBeaten) {
+                            if (this.board.board[1][3].content || this.board.board[1][4].content) {
+                                this.isLosing = true
+                                setTimeout(() => this.finishGame(), 300)
+                            } else {
+                                this.spawnPill()
+                            }
                             this.input.inputBusy = true
-                            this.spawnPill()
                         }
                     }, wereObjectsCleared ? 200 : 10)
                 }
@@ -173,9 +181,9 @@ export class GameManager {
     }
 
     finishGame() {
-        console.log("finish")
         // if (document.getElementsByClassName("failure_screen") == []) {
         this.board.render()
+        this.input.inputBusy = true
         this.scoreSystem.saveScore()
         var failureScreen = document.createElement("div")
         failureScreen.tabIndex = "-1"
@@ -190,7 +198,9 @@ export class GameManager {
             }
         }
         document.getElementById("game_area").appendChild(failureScreen)
+        this.pillThrower.stopThrow()
         this.pillThrower.changeDoctorSprite("failed")
+        this.virusChoreographer.startCelebration()
         failureScreen.focus()
         // }
     }
@@ -200,7 +210,7 @@ export class GameManager {
     }
 
     getBackgroundColor() {
-        var colors = ["cyan", "purple", "pink"]
+        var colors = ["cyan", "purple", "green"]
         return colors[this.level % colors.length]
     }
 

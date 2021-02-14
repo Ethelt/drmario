@@ -21,6 +21,8 @@ export class VirusManager {
 
     virusDestroyed(virus) {
         this.gameManager.scoreSystem.incrementScore()
+        var sameColoredViruses = this.viruses.filter(x => x.color == virus.color)
+        this.gameManager.virusChoreographer.startSuffering({ color: virus.color, isFatal: sameColoredViruses.length > 1 ? false : true, initCounter: 0 })
         this.destroyVirus(virus)
     }
 

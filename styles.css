@@ -44,6 +44,13 @@ body {
     background-image: url("./images/area/magnifier.png");
 }
 
+.dancer {
+    width: 128px;
+    height: 96px;
+    position: absolute;
+    left: -1000px
+}
+
 #doctor_area {
     position: absolute;
     right: 64px;

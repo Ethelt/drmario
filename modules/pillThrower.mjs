@@ -92,7 +92,6 @@ export class pillThrower {
     }
 
     changeDoctorSprite(image) {
-        console.log(image)
         this.doctor.src = `images/doctor/${image}.png`
     }
 
