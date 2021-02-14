@@ -9,7 +9,7 @@ export class VirusChoreographer {
         this.positionCounter = 0
         this.moveCounter = 4
         this.moveInterval;
-        this.dyingDancers = []
+        this.sufferingDancers = []
         // [1,4; 5,7; 6,2]
         // 0, 6, 12
 
@@ -18,6 +18,7 @@ export class VirusChoreographer {
     createDancers() {
         this.clearBodies()
         var dancers = [];
+        this.sufferingDancers = [];
         ["brown", "blue", "yellow"].forEach((color, i) => {
             var element = document.createElement("div")
             element.classList.add("dancer")
@@ -71,21 +72,21 @@ export class VirusChoreographer {
     }
 
     startSuffering(data) {
-        if (this.dyingDancers.length == 0) {
+        if (this.sufferingDancers.length == 0) {
             clearInterval(this.moveInterval)
             this.moveCounter = 4
             // this.suffer()
             this.moveInterval = setInterval(() => { this.suffer() }, 300)
         }
         data.initCounter = this.moveCounter
-        this.dyingDancers.push(data)
+        this.sufferingDancers.push(data)
     }
 
     suffer() {
-        if (this.dyingDancers.length == 0) {
+        if (this.sufferingDancers.length == 0) {
             this.startDance()
         } else {
-            var currentlyDying = this.dyingDancers.filter(dancer => dancer.initCounter + 10 == this.moveCounter)
+            var currentlyDying = this.sufferingDancers.filter(dancer => dancer.initCounter + 10 == this.moveCounter)
             if (currentlyDying.length > 0) {
                 currentlyDying.forEach(dying => {
                     if (dying.isFatal) {
@@ -93,11 +94,11 @@ export class VirusChoreographer {
                         dyingDancer.destroy()
                         this.dancers.splice(this.dancers.indexOf(dyingDancer), 1)
                     }
-                    this.dyingDancers.splice(this.dyingDancers.indexOf(dying), 1)
+                    this.sufferingDancers.splice(this.sufferingDancers.indexOf(dying), 1)
                 })
             } else {
                 this.dancers.forEach(dancer => {
-                    if (this.dyingDancers.map(x => x.color).includes(dancer.color)) {
+                    if (this.sufferingDancers.map(x => x.color).includes(dancer.color)) {
                         dancer.setSprite(5 + (this.moveCounter % 2))
                     } else {
                         var counter = (this.moveCounter % 4) + 1

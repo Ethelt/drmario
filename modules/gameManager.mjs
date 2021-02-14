@@ -210,7 +210,7 @@ export class GameManager {
     }
 
     getBackgroundColor() {
-        var colors = ["cyan", "purple", "green"]
+        var colors = ["pink", "purple", "green"]
         return colors[this.level % colors.length]
     }
 

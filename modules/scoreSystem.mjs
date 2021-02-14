@@ -23,7 +23,8 @@ export class ScoreSystem {
     }
 
     getMaxScore() {
-        return localStorage.getItem('score');
+        var maxScore = localStorage.getItem('score');
+        return maxScore ? maxScore : 0
     }
 
     updateScoreBoard() {
