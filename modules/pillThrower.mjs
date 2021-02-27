@@ -6,12 +6,15 @@ export class pillThrower {
         this.pill = []
         this.gameManager = gameManager;
         this.currentStep = 0
-        this.throw;
-        this.doctor = document.getElementById("doctor")
+        this.throw; // Holds the interval of a current throw animation
+        this.doctor = document.getElementById("doctor") // HTML element holding the doctor sprite
+        // These two variables hold frame-by-frame positions and rotations of PillParts during the throw.
+        // Numbers are pixels from the top and right
         this.path1 = [this.step(96, 288, "left"), this.step(96, 288, "left"), this.step(96, 288, "down"), this.step(64, 288, "right"), this.step(32, 320, "up"), this.step(32, 352, "left"), this.step(32, 352, "down"), this.step(32, 352, "right"), this.step(0, 384, "up"), this.step(32, 416, "left"), this.step(32, 416, "down"), this.step(32, 416, "right"), this.step(0, 448, "up"), this.step(32, 480, "left"), this.step(32, 480, "down"), this.step(32, 480, "right"), this.step(0, 512, "up"), this.step(32, 544, "left"), this.step(32, 544, "down"), this.step(64, 544, "right"), this.step(32, 576, "up"), this.step(64, 608, "left"), this.step(96, 608, "left"), this.step(128, 608, "left"), this.step(160, 608, "left"), this.step(160, 608, "left"), this.step(160, 608, "left")]
         this.path2 = [this.step(96, 256, "right"), this.step(96, 256, "right"), this.step(64, 288, "up"), this.step(64, 320, "left"), this.step(64, 320, "down"), this.step(32, 320, "right"), this.step(0, 352, "up"), this.step(32, 384, "left"), this.step(32, 384, "down"), this.step(32, 384, "right"), this.step(0, 416, "up"), this.step(32, 448, "left"), this.step(32, 448, "down"), this.step(32, 448, "right"), this.step(0, 480, "up"), this.step(32, 512, "left"), this.step(32, 512, "down"), this.step(32, 512, "right"), this.step(0, 544, "up"), this.step(64, 576, "left"), this.step(64, 576, "down"), this.step(64, 576, "right"), this.step(96, 576, "right"), this.step(128, 576, "right"), this.step(160, 576, "right"), this.step(160, 576, "right"), this.step(160, 576, "right")]
     }
 
+    // Create a pill based on nextPillColor and render it
     prepareNextPill() {
         this.stopThrow()
         this.pill = []
@@ -33,6 +36,7 @@ export class pillThrower {
         this.pill.push(pillPart)
     }
 
+    // Play the animation of the thrown pill
     throwPill() {
         this.throw = setInterval(() => {
             if (this.currentStep == this.path1.length) {
@@ -51,9 +55,10 @@ export class pillThrower {
                 this.pill[1].updateSprite(step.direction)
                 this.currentStep += 1
             }
-        }, 100)
+        }, 100) // Change the timeout in GameManager.spawnPill to be (25 * this interval) if you want to change it
     }
 
+    // Reset the throw
     stopThrow() {
         clearInterval(this.throw)
         if (this.pill && this.pill.length > 0) {
@@ -66,6 +71,7 @@ export class pillThrower {
         this.currentStep = 0
     }
 
+    // This is not the same as a PillPart class, it's simplified version only used to play the throw animation
     pillPart(element, color, parent) {
         var pillPart = {
             element: element,
@@ -86,6 +92,7 @@ export class pillThrower {
         return pillPart
     }
 
+    // PillPart data, for single frame of animation
     step(top, right, direction) {
         var step = { top: top, right: right, direction: direction }
         return step
@@ -94,6 +101,4 @@ export class pillThrower {
     changeDoctorSprite(image) {
         this.doctor.src = `images/doctor/${image}.png`
     }
-
-    // throwPath1 = () => {  }
 }

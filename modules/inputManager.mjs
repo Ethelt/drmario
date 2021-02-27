@@ -1,5 +1,6 @@
 "use strict";
 
+// This class handles the user input
 export class InputManager {
     controlScheme = {
         moveLeft: ["ArrowLeft", "a"],
@@ -25,7 +26,7 @@ export class InputManager {
         if (this.controlScheme.moveDown.includes(event.key)) {
             clearTimeout(this.gameManager.scheduledDrop)
             this.inputBusy = true
-            this.gameManager.scheduledDrop = setTimeout(() => { this.gameManager.dropActivePill(true) }, 10)
+            this.gameManager.scheduledDrop = setTimeout(() => { this.gameManager.dropActivePill(true) }, 10) // Start moving the pill down quickly
         }
         if (!this.inputBusy) {
             if (this.controlScheme.moveLeft.includes(event.key)) {

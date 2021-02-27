@@ -1,14 +1,14 @@
 "use strict";
 
 import { Pill } from "./pill.mjs"
-import { PillPart } from "./pillPart.mjs";
 import { Virus } from "./virus.mjs";
 import { Cell } from "./cell.mjs";
 
+// This class holds the array representing the board and is responsible for updating and rendering it
 export class Board {
     constructor(width, height) {
         this.width = width;
-        this.height = height;
+        this.height = height + 1; //Height of the board needs to be higher than the playable area, see fillAroundNeck() for more info
         this.board = this.createBoard();
         this.render();
     }
@@ -25,6 +25,8 @@ export class Board {
         return board
     }
 
+    // Player needs to be able to rotate the pill into the neck of the bottle, but not into the surrounding cells in the same row
+    // This function fills them with invisible and uninteractable objects that prevent rotation and movement into them
     fillAroundNeck(board) {
         var rowToFill = board[0]
         var cellsToFill = [0, 1, 2, 5, 6, 7]
@@ -40,9 +42,6 @@ export class Board {
         pill.parts[0].position = [0, 3]
         this.board[1][4].content = pill.parts[1]
         pill.parts[1].position = [0, 4]
-        // if (this.board[2][3].content || this.board[2][4].content) {
-        //     isLosing = true
-        // }
         return { pill: pill }
     }
 
@@ -89,7 +88,6 @@ export class Board {
             if (pill.parts[0].position[1] == this.width - 1) {
                 movePossible = this.movePill(pill, [0, -1])
             } else if (this.board[pill.parts[0].position[0]][pill.parts[1].position[1] + 1].content != null) {
-                // movePossible = this.movePill(pill, [0, -1])
                 movePossible = false
             }
             if (movePossible) {
@@ -115,7 +113,6 @@ export class Board {
             }
         }
     }
-
 
     rotatePillRight(pill) {
         if (pill.isHorizontal) {
@@ -174,6 +171,8 @@ export class Board {
         return virus
     }
 
+    // Get objects to remove in a given row and column.
+    // Objects can only be romoved if there is 4+ objects of the same color in line
     getObjectsToRemove(position) {
         var objectsToRemove = new Set()
         var row = this.getRow(position[0])
@@ -211,9 +210,11 @@ export class Board {
 
     clearObject(object) {
         object.destroy()
-        setTimeout(() => { this.board[object.position[0]][object.position[1]].content = null }, 300)
+        setTimeout(() => { this.board[object.position[0]][object.position[1]].content = null }, 300) // Give time to play destruction animation of object
     }
 
+    // Move all the pills down one row
+    // Returns info if anything moved and all the pills that didn't
     doGravityStep() {
         var movedPills = []
         var stablePills = []
@@ -234,9 +235,10 @@ export class Board {
                 }
             })
         }
-        return { areMovesPossible: movedPills.length > 0, stablePills: stablePills }
+        return { wasAnythingMoved: movedPills.length > 0, stablePills: stablePills }
     }
 
+    // Renders the board depending on the info in board array
     render() {
         var board = document.createElement("div")
         board.id = "board"
@@ -270,6 +272,7 @@ export class Board {
         return column
     }
 
+    // Get random free position, reserved width and height restrict how far up/right can they be
     getRandomFreePosition(reservedHeight = 0, reservedWidth = 0) {
         var position = []
         do {

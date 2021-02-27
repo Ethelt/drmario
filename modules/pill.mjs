@@ -2,6 +2,8 @@
 
 import { PillPart } from "./pillPart.mjs";
 
+// Class representing a pill, it is made of two instances of PillPart
+// It's worth noting that a pill is not something that exists on the map, it only manages its PillParts
 export class Pill {
     constructor(color) {
         var colors = color.split("|")
@@ -15,6 +17,7 @@ export class Pill {
         this.updatePartsSprites()
     }
 
+    // PillParts have different sprites based on their rotation and position in Pill, this function handles that
     updatePartsSprites() {
         if (this.parts.length > 1) {
             if (this.isHorizontal) {
